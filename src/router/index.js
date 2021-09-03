@@ -2,10 +2,11 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Login from '../components/Login'
+import Home from '../components/Home'
 
 Vue.use(VueRouter)
 
-export default new VueRouter({
+const router = new VueRouter({
   routes: [
     {
       path: '/',
@@ -13,6 +14,22 @@ export default new VueRouter({
     }, {
       path: '/login',
       component: Login
+    }, {
+      path: '/home',
+      component: Home
     }
   ]
 })
+
+// 添加路由导航守卫
+router.beforeEach((to, from, next) => {
+  // to 代表的是去哪一个页面
+  if (to.path === '/login') return next()
+  // from代表的是从哪一个页面而来
+  const tokenStr = window.sessionStorage.getItem('token')
+  // next是一个函数 表示放行/强制性跳转
+  if (!tokenStr) return next('/login')
+  next()
+})
+
+export default router
