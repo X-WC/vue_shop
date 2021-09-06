@@ -140,6 +140,7 @@ export default {
     text-align: center;
     line-height:24px;
     cursor: pointer;
+    letter-spacing: 4px;
   }
   .el-menu {
     border-right: 0;
