@@ -13,6 +13,26 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.icon-yonghu:before {
+  content: "\e652";
+}
+
+.icon-baobiao:before {
+  content: "\e833";
+}
+
+.icon-dingdan:before {
+  content: "\e642";
+}
+
+.icon-component-full:before {
+  content: "\e8b2";
+}
+
+.icon-gouwudai:before {
+  content: "\e68c";
+}
+
 .icon-ren:before {
   content: "\e619";
 }
@@ -20,4 +40,3 @@
 .icon-suo:before {
   content: "\e63d";
 }
-
