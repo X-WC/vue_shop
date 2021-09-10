@@ -28,7 +28,8 @@ import {
   Icon,
   Tree,
   Select,
-  Option
+  Option,
+  Cascader
 } from 'element-ui'
 
 Vue.use(Button)
@@ -58,6 +59,7 @@ Vue.use(Icon)
 Vue.use(Tree)
 Vue.use(Select)
 Vue.use(Option)
+Vue.use(Cascader)
 // 将Message挂载到全局对象上
 Vue.prototype.$message = Message
 // 将MessageBox挂载到全局对象上
