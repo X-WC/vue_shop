@@ -11,7 +11,7 @@
       <!-- 添加分类模块 -->
       <el-row>
         <el-col>
-          <el-button type="primary" @click="addCate">添加分类</el-button>
+          <el-button type="primary" @click="showAddCateDialog">添加分类</el-button>
         </el-col>
       </el-row>
       <!-- 分类表格模块 -->
@@ -60,12 +60,9 @@
       title="添加分类"
       :visible.sync="addDialogVisible"
       width="50%"
+      @close="addCateDialogClosed"
     >
-      <el-form
-      ref="addCateForm"
-      :model="addCateForm"
-      :rules="addCateRules"
-      label-width="100px">
+     <el-form ref="addCateFormRef" :rules="addCateRules" :model="addCateForm" >
         <el-form-item label="分类名称" prop="cat_name">
           <el-input v-model="addCateForm.cat_name"></el-input>
         </el-form-item>
@@ -75,13 +72,15 @@
             :options="parentList"
             :props="props"
             @change="parentCateChange"
+            clearable
+            change-on-select
           ></el-cascader>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="addDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="addDialogVisible = false">确 定</el-button>
+          <el-button type="primary" @click="addCate">确 定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -117,10 +116,6 @@ export default {
       },
       // 数据的总数
       total: 0,
-      cateTreeProps: {
-        children: 'children',
-        label: 'cat_name'
-      },
       // 为table指定列的定义
       columns: [{
         label: '分类名称',
@@ -148,7 +143,7 @@ export default {
         // 分类名称
         cat_name: '',
         // 父级分类id
-        cat_id: 0,
+        cat_pid: 0,
         // 添加分类的等级
         cat_level: 0
       },
@@ -167,7 +162,7 @@ export default {
         label: 'cat_name',
         children: 'children'
       },
-      // 父级id值的数据
+      // 父级id值的数据 选中项绑定值
       selectedKeys: [],
       // 控制编辑弹出框显示与隐藏
       editDialogVisible: false
@@ -190,43 +185,54 @@ export default {
     async parentCateList () {
       const { data: res } = await this.$http.get('categories', { params: { type: 2 } })
       if (res.meta.status !== 200) return this.$message.error('获取父级分类数据失败')
-      // console.log(res)
       this.parentList = res.data
+      console.log(this.parentList)
+    },
+    // 显示添加分类对话框
+    showAddCateDialog () {
+      // 调用parentCateList获取分类列表
+      this.parentCateList()
+      // 显示添加分类对话框
+      this.addDialogVisible = true
     },
     // 当修改父级分类的时候
     parentCateChange () {
       // 当级联菜单发生改变的时候
-      // console.log(this.selectedKeys)
+      console.log(this.selectedKeys)
       // 判断是否选择修改父级分类
       if (this.selectedKeys.length > 0) {
         // 将数组的最后一项改为父级分类
-        this.addCateForm.cat_id = this.selectedKeys[this.selectedKeys.length - 1]
-        this.addCateForm.cat_level = this.selectedKeys[this.selectedKeys.length]
+        this.addCateForm.cat_pid = this.selectedKeys[this.selectedKeys.length - 1]
+        this.addCateForm.cat_level = this.selectedKeys.length
+        // console.log(this.addCateForm)
       } else {
-        this.addCateForm.cat_id = 0
+        this.addCateForm.cat_pid = 0
         this.addCateForm.cat_level = 0
       }
     },
+    // 关闭添加分类对话框
+    addCateDialogClosed () {
+      // 当关闭添加分类对话框时，重置表单
+      this.$refs.addCateFormRef.resetFields()
+      this.selectedKeys = []
+      this.addCateForm.cat_pid = 0
+      this.addCateForm.cat_level = 0
+    },
     // 监听添加分类按钮的点击事件
     addCate () {
-      // console.log(this.addCateForm)
       // 点击确定，完成添加分类
-      console.log(this.addCateForm)
-      this.$refs.addCateForm.validate(async valid => {
+      this.$refs.addCateFormRef.validate(async valid => {
+        console.log(this.addCateForm)
         if (!valid) return
         // 发送请求完成添加分类
-        const { data: res } = await this.$http.post(
-          'categories',
-          this.addCateForm
-        )
-
+        const { data: res } = await this.$http.post('categories', this.addCateForm)
         if (res.meta.status !== 201) {
           return this.$message.error('添加分类失败')
         }
 
         this.$message.success('添加分类成功')
         this.getCateList()
-        this.addCateDialogVisible = false
+        this.addDialogVisible = false
       })
     },
     // 监听页码值改变事件
