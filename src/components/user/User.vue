@@ -170,7 +170,7 @@ export default {
       queryInfo: {
         query: '',
         pagenum: 1,
-        pagesize: 2
+        pagesize: 5
       },
       userList: [],
       total: 0,
@@ -298,7 +298,7 @@ export default {
     // 表单的预校验
     modifyUserInfo () {
       this.$refs.editForm.validate(async validator => {
-        console.log(validator)
+        // console.log(validator)
         if (!validator) return
         const { data: res } = await this.$http.put('users/' + this.editForm.id, { email: this.editForm.email, mobile: this.editForm.mobile })
         if (res.meta.status !== 200) {
@@ -324,7 +324,7 @@ export default {
           return this.$message.error(res.meta.msg)
         }
         this.getUserList()
-        this.$message.success('删除成功')
+        return this.$message.success('删除成功')
       }
       return this.$message.info('已取消删除')
     },
