@@ -28,13 +28,36 @@
           <el-button type="primary" size="mini" :disabled="isButtonDisabled" @click="paramsDialogVisible = true">添加参数</el-button>
           <!-- 添加参数表格 -->
           <el-table :data="manyTableData" stripe border>
-            <el-table-column type="expand"></el-table-column>
+            <el-table-column type="expand">
+              <template slot-scope="scope">
+                <el-tag
+                  v-for="(item,i) in scope.row.attr_vals"
+                  :key="i"
+                  closable
+                  :disable-transitions="true"
+                  @close="handleClose(i, scope.row)"
+                  >
+                  {{item}}
+                </el-tag>
+                <el-input
+                  class="input-new-tag"
+                  v-if="scope.row.inputVisible"
+                  v-model="scope.row.inputValue"
+                  ref="saveTagInput"
+                  size="small"
+                  @keyup.enter.native="handleInputConfirm(scope.row)"
+                  @blur="handleInputConfirm(scope.row)"
+                >
+                </el-input>
+                <el-button v-else size="small" class="button-new-tag" @click="showInput(scope.row)">+ New Tag</el-button>
+              </template>
+            </el-table-column>
             <el-table-column type="index"></el-table-column>
             <el-table-column label="参数名称" prop="attr_name"></el-table-column>
             <el-table-column label="操作">
-              <template>
-                <el-button type="primary" icon="el-icon-edit" size="mini">编辑</el-button>
-                <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
+              <template slot-scope="scope">
+                <el-button type="primary" icon="el-icon-edit" size="mini" @click="editDialogVisible=true">编辑</el-button>
+                <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteParams(scope.row.attr_id)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -44,13 +67,36 @@
           <el-button type="primary" size="mini" :disabled="isButtonDisabled" @click="paramsDialogVisible=true">添加属性</el-button>
           <!-- 添加属性表格 -->
           <el-table :data="onlyTableData" stripe border>
-            <el-table-column type="expand"></el-table-column>
+            <el-table-column type="expand">
+              <template slot-scope="scope">
+                <el-tag
+                  v-for="(item,i) in scope.row.attr_vals"
+                  :key="i"
+                  closable
+                  :disable-transitions="true"
+                  @close="handleClose(i, scope.row)"
+                  >
+                  {{item}}
+                </el-tag>
+                <el-input
+                  class="input-new-tag"
+                  v-if="scope.row.inputVisible"
+                  v-model="scope.row.inputValue"
+                  ref="saveTagInput"
+                  size="small"
+                  @keyup.enter.native="handleInputConfirm(scope.row)"
+                  @blur="handleInputConfirm(scope.row)"
+                >
+                </el-input>
+                <el-button v-else size="small" class="button-new-tag" @click="showInput(scope.row)">+ New Tag</el-button>
+              </template>
+            </el-table-column>
             <el-table-column type="index"></el-table-column>
-            <el-table-column label="属性名称"></el-table-column>
+            <el-table-column label="属性名称" prop="attr_name"></el-table-column>
             <el-table-column label="操作">
-              <template>
-                <el-button type="primary" icon="el-icon-edit">编辑</el-button>
-                <el-button type="primary" icon="el-icon-delete">删除</el-button>
+              <template slot-scope="scope">
+                <el-button type="primary" icon="el-icon-edit" size="mini" @click="editDialogVisible=true">编辑</el-button>
+                <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteParams(scope.row.attr_id)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -65,12 +111,12 @@
       @close="paramsClosed"
     >
       <el-form ref="addParamsRef"
-        :model="addParamsForm"
+        :model="addForm"
         :rules="addParamsRules"
         label-width="80px"
       >
         <el-form-item :label="titleText" prop="attr_name">
-          <el-input v-model="addParamsForm.attr_name"></el-input>
+          <el-input v-model="addForm.attr_name"></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -79,6 +125,28 @@
           <el-button type="primary" @click="addParams">确 定</el-button>
         </span>
       </template>
+    </el-dialog>
+    <!-- 修改参数/属性弹出框 -->
+    <el-dialog
+      :title="'添加'+titleText"
+      :visible.sync="editDialogVisible"
+      width="50%"
+      @close="editDialogClosed"
+      >
+      <el-form
+      ref="editFormRef"
+      :model="editForm"
+      :rules="editFormRules"
+      label-width="80px"
+      >
+        <el-form-item :label="titleText" prop="attr_name">
+          <el-input v-model="editForm.attr_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editParams">确 定</el-button>
+      </span>
     </el-dialog>
   </div>
 </template>
@@ -108,11 +176,23 @@ export default {
       // 控制添加参数弹出框的显示与隐藏
       paramsDialogVisible: false,
       // 添加参数的数据
-      addParamsForm: {
+      addForm: {
         attr_name: ''
       },
       // 添加参数表单的校验规则
       addParamsRules: {
+        attr_name: [
+          { required: true, message: '请输入添加的分类', trigger: 'blur' }
+        ]
+      },
+      // 编辑弹框的显示与隐藏
+      editDialogVisible: false,
+      // 编辑弹框的数据
+      editForm: {
+        attr_name: ''
+      },
+      // 编辑弹框的校验规则
+      editFormRules: {
         attr_name: [
           { required: true, message: '请输入添加的分类', trigger: 'blur' }
         ]
@@ -135,9 +215,15 @@ export default {
     },
     // 监听级联列表是否发生改变
     async handleChange () {
-      console.log(this.selectCateKeys)
+      // console.log(this.selectCateKeys)
       // 获取参数列表
       const { data: res } = await this.$http.get(`categories/${this.cateId}/attributes`, { params: { sel: this.activeName } })
+      // console.log(res)
+      res.data.forEach(item => {
+        item.attr_vals = item.attr_vals ? item.attr_vals.split(' ') : []
+        item.inputVisible = false
+        item.inputValue = ''
+      })
       console.log(res)
       if (res.meta.status !== 200) return this.$message.error('获取参数列表失败')
       if (this.activeName === 'many') {
@@ -148,27 +234,97 @@ export default {
     },
     // 监听tab栏切换
     handleClick () {
-      console.log(this.activeName)
+      // console.log(this.activeName)
       this.handleChange()
     },
-    // 添加分类
+    // 添加分类/属性
     addParams () {
       // 发起预校验
       this.$refs.addParamsRef.validate(async valid => {
         if (!valid) return
-        console.log(this.activeName)
-        const { data: res } = await this.$http.post(`categories/${this.cateId}/attributes`, { attr_name: this.addParamsForm.attr_name, attr_sel: this.activeName, attr_vals: 'a,b,c' })
+        // console.log(this.activeName)
+        const { data: res } = await this.$http.post(`categories/${this.cateId}/attributes`, { attr_name: this.addForm.attr_name, attr_sel: this.activeName, attr_vals: 'a,b,c' })
         if (res.meta.status !== 201) return this.$message.error('添加参数失败')
         this.$message.success('添加参数成功')
-        this.getCateList()
-        this.handleChange()
         // console.log(res)
         this.paramsDialogVisible = false
+        this.getCateList()
+        this.handleChange()
       })
     },
-    // 添加分类弹框关闭时重置表单
+    // 添加分类/属性弹框关闭时重置表单
     paramsClosed () {
       this.$refs.addParamsRef.resetFields()
+    },
+    // 删除弹框
+    async deleteParams (attrid) {
+      // console.log(attrid)
+      const result = await this.$confirm('此操作将永久删除该' + this.titleText, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err)
+      // console.log(result)
+      if (result !== 'confirm') {
+        return this.$message.info('已取消删除')
+      }
+      const { data: res } = await this.$http.delete(`categories/${this.cateId}/attributes/${attrid}`)
+      // console.log(res)
+      if (res.meta.status !== 200) {
+        return this.$message.error('删除失败')
+      }
+      this.$message.success('删除' + this.titleText + '成功!')
+      this.getCateList()
+      this.handleChange()
+    },
+    // 编辑参数/属性
+    editParams () {
+      // 发起预校验
+      this.$refs.editFormRef.validate(async valid => {
+        // if (!valid) return
+      })
+      this.editDialogVisible = false
+    },
+    // 编辑弹框关闭时重置表单
+    editDialogClosed () {
+      this.$refs.editFormRef.resetFields()
+    },
+    // 文本框处理函数
+    handleInputConfirm (row) {
+      // 文本框按下enter键/失去焦点都会触发执行
+      // 判断用户在文本框中输入的内容是否合法
+      if (row.inputValue.trim().length === 0) {
+        row.inputValue = ''
+        row.inputVisible = false
+      } else {
+        // 如果数据合法 需要保存数据
+        row.attr_vals.push(row.inputValue.trim())
+        row.inputValue = ''
+        row.inputVisible = false
+        // 调用保存数据的函数
+        this.saveAttrVals(row)
+      }
+    },
+    // 按钮的点击事件
+    showInput (row) {
+      row.inputVisible = true
+      this.$nextTick(_ => {
+        // 让文本框获得焦点
+        this.$refs.saveTagInput.$refs.input.focus()
+      })
+    },
+    // 保存数据
+    async saveAttrVals (row) {
+      const { data: res } = await this.$http.put(`categories/${this.cateId}/attributes/${row.attr_id}`, { attr_name: row.attr_name, attr_sel: row.attr_sel, attr_vals: row.attr_vals.join(' ') })
+      if (res.meta.status !== 200) return this.$message.error('修改参数项失败')
+      this.$message.success('修改参数项成功')
+    },
+    // 关闭tag标签
+    handleClose (index, row) {
+      // 删除对应索引的参数可选项
+      row.attr_vals.splice(index, 1)
+      // 调用函数 完成保存可选项的操作
+      this.saveAttrVals(row)
     }
   },
   computed: {
@@ -200,5 +356,20 @@ export default {
 }
 .el-tabs{
   margin-top: 15px;
+}
+.el-tag + .el-tag {
+    margin-left: 10px;
+}
+.button-new-tag {
+  margin-left: 10px;
+  height: 32px;
+  line-height: 30px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.input-new-tag {
+  width: 90px;
+  margin-left: 10px;
+  vertical-align: bottom;
 }
 </style>
