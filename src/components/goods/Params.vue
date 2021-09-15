@@ -41,7 +41,7 @@
         </el-tab-pane>
         <!-- 添加属性 -->
         <el-tab-pane label="静态属性" name="only">
-          <el-button type="primary" size="mini" :disabled="isButtonDisabled">添加属性</el-button>
+          <el-button type="primary" size="mini" :disabled="isButtonDisabled" @click="paramsDialogVisible=true">添加属性</el-button>
           <!-- 添加属性表格 -->
           <el-table :data="onlyTableData" stripe border>
             <el-table-column type="expand"></el-table-column>
@@ -57,19 +57,19 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
-    <!-- 添加参数弹出框 -->
+    <!-- 添加参数/属性弹出框 -->
     <el-dialog
-      title="添加参数"
+      :title="'添加' + titleText"
       :visible.sync="paramsDialogVisible"
       width="50%"
       @close="paramsClosed"
     >
-      <el-form ref="addParamsForm"
+      <el-form ref="addParamsRef"
         :model="addParamsForm"
         :rules="addParamsRules"
         label-width="80px"
       >
-        <el-form-item label="动态参数" prop="many">
+        <el-form-item :label="titleText" prop="attr_name">
           <el-input v-model="addParamsForm.attr_name"></el-input>
         </el-form-item>
       </el-form>
@@ -108,10 +108,12 @@ export default {
       // 控制添加参数弹出框的显示与隐藏
       paramsDialogVisible: false,
       // 添加参数的数据
-      addParamsForm: {},
+      addParamsForm: {
+        attr_name: ''
+      },
       // 添加参数表单的校验规则
       addParamsRules: {
-        many: [
+        attr_name: [
           { required: true, message: '请输入添加的分类', trigger: 'blur' }
         ]
       }
@@ -151,11 +153,22 @@ export default {
     },
     // 添加分类
     addParams () {
-      this.paramsDialogVisible = false
+      // 发起预校验
+      this.$refs.addParamsRef.validate(async valid => {
+        if (!valid) return
+        console.log(this.activeName)
+        const { data: res } = await this.$http.post(`categories/${this.cateId}/attributes`, { attr_name: this.addParamsForm.attr_name, attr_sel: this.activeName, attr_vals: 'a,b,c' })
+        if (res.meta.status !== 201) return this.$message.error('添加参数失败')
+        this.$message.success('添加参数成功')
+        this.getCateList()
+        this.handleChange()
+        // console.log(res)
+        this.paramsDialogVisible = false
+      })
     },
     // 添加分类弹框关闭时重置表单
     paramsClosed () {
-      this.$refs.addParamsForm.resetFields()
+      this.$refs.addParamsRef.resetFields()
     }
   },
   computed: {
@@ -169,6 +182,13 @@ export default {
         return this.selectCateKeys[this.selectCateKeys.length - 1]
       }
       return null
+    },
+    // 判断弹出框中的标题内容
+    titleText () {
+      if (this.activeName === 'many') {
+        return '动态参数'
+      }
+      return '静态属性'
     }
   }
 }
