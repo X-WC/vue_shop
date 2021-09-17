@@ -52,9 +52,31 @@
               ></el-cascader>
             </el-form-item>
           </el-tab-pane>
-          <el-tab-pane label="商品参数" name="1">商品参数</el-tab-pane>
-          <el-tab-pane label="商品属性" name="2">商品属性</el-tab-pane>
-          <el-tab-pane label="商品图片" name="3">商品图片</el-tab-pane>
+          <el-tab-pane label="商品参数" name="1">
+            <el-form-item :label="item.attr_name" v-for="item in manyTableData" :key="item.attr_id">
+                <el-checkbox-group v-model="item.attr_vals">
+                  <el-checkbox border :label="val" v-for="(val, i) in item.attr_vals" :key="i"></el-checkbox>
+                </el-checkbox-group>
+            </el-form-item>
+          </el-tab-pane>
+          <el-tab-pane label="商品属性" name="2">
+            <el-form-item v-for="item in onlyTableData" :key="item.attr_id" :label="item.attr_name">
+              <el-input v-model="item.attr_vals"></el-input>
+            </el-form-item>
+          </el-tab-pane>
+          <el-tab-pane label="商品图片" name="3">
+             <el-upload
+              class="upload-demo"
+              action="https://lianghj.top:8888/api/private/v1/upload"
+              :headers="uploadHeaders"
+              :on-preview="handlePreview"
+              :on-remove="handleRemove"
+              :on-success="handleSuccess"
+              list-type="picture"
+              >
+              <el-button size="small" type="primary">点击上传</el-button>
+             </el-upload>
+          </el-tab-pane>
           <el-tab-pane label="商品内容" name="4">商品内容</el-tab-pane>
         </el-tabs>
       </el-form>
@@ -102,7 +124,13 @@ export default {
         children: 'children'
       },
       // 用户分类列表
-      cateList: []
+      cateList: [],
+      // 动态参数的数据列表
+      manyTableData: [],
+      // 静态属性的数据列表
+      onlyTableData: [],
+      // 上传图片的请求头部信息
+      uploadHeaders: {}
     }
   },
   // 当页面重新加载时
@@ -110,10 +138,31 @@ export default {
     this.getCateList()
   },
   methods: {
-    handleClick (tab, event) {
+    // 点击切换tab拦
+    async handleClick (tab, event) {
       // console.log(tab.index)
       // 将点击的index值传给activeIndex
       this.activeIndex = tab.index
+      // 当用户点击切换tab栏时触发
+      if (this.activeIndex === '1') {
+        // 发送请求获取动态参数列表
+        const { data: res } = await this.$http.get(`categories/${this.cateId}/attributes`, { params: { sel: 'many' } })
+        if (res.meta.status !== 200) return this.$message.error('获取参数列表失败')
+        // 将动态参数每一项数据中的attr_vals的字符串变化为数组
+        res.data.forEach(item => {
+          item.attr_vals = item.attr_vals.length === 0 ? [] : item.attr_vals.split(' ')
+        })
+        this.manyTableData = res.data
+        // console.log(this.manyTableData)
+      } else if (this.activeIndex === '2') {
+        // 发送请求获取静态属性
+        const { data: res } = await this.$http.get(`categories/${this.cateId}/attributes`, { params: { sel: 'only' } })
+        if (res.meta.status !== 200) return this.$message.error('获取属性列表失败')
+        // res.data.forEach(item => {
+        //   item.attr_vals = item.attr_vals.length === 0 ? [] : item.attr_vals.split(' ')
+        // })
+        this.onlyTableData = res.data
+      }
     },
     // 获取所有商品的分类列表
     async getCateList () {
@@ -137,8 +186,8 @@ export default {
         if (this.addForm.goods_cat.length !== 3) {
           this.$message.error('请选择商品的分类')
           return false
-        } else if (this.addForm.goods_price.trim() === '0') {
-          this.$message.error('请选择商品价格')
+        } else if (this.addForm.goods_name.trim() === '') {
+          this.$message.error('请选择商品名称')
           return false
         } else if (this.addForm.goods_price.trim() === '0') {
           this.$message.error('请选择商品价格')
@@ -151,6 +200,20 @@ export default {
           return false
         }
       }
+    },
+    // 预览图片的时候 触发的方法
+    handlePreview (result) {
+      console.log(result)
+    }
+  },
+  computed: {
+    // 获取选中的三级id值
+    cateId () {
+      // console.log(this.addForm.goods_cat.length)
+      if (this.addForm.goods_cat.length === 3) {
+        return this.addForm.goods_cat[this.addForm.goods_cat.length - 1]
+      }
+      return null
     }
   }
 }
@@ -159,5 +222,8 @@ export default {
 <style lang="less" scoped>
 .el-steps{
   margin: 15px 0;
+}
+.el-checkbox{
+  margin-right: 10px;
 }
 </style>

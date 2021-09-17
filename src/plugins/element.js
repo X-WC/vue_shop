@@ -34,7 +34,10 @@ import {
   Tabs,
   TabPane,
   Step,
-  Steps
+  Steps,
+  Checkbox,
+  CheckboxGroup,
+  Upload
 } from 'element-ui'
 
 Vue.use(Button)
@@ -70,6 +73,9 @@ Vue.use(Tabs)
 Vue.use(TabPane)
 Vue.use(Step)
 Vue.use(Steps)
+Vue.use(Checkbox)
+Vue.use(CheckboxGroup)
+Vue.use(Upload)
 // 将Message挂载到全局对象上
 Vue.prototype.$message = Message
 // 将MessageBox挂载到全局对象上
