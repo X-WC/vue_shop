@@ -7,6 +7,15 @@ import './plugins/element.js'
 import './assets/css/global.css'
 import './assets/css/iconfont.css'
 import TreeTable from 'vue-table-with-tree-grid'
+// 导入富文本编辑器
+import VueQuillEditor from 'vue-quill-editor'
+// 导入富文本编辑器的相关样式
+import 'quill/dist/quill.core.css' // import styles
+import 'quill/dist/quill.snow.css' // for snow theme
+import 'quill/dist/quill.bubble.css' // for bubble theme
+
+// 在全局情况下 绑定富文本编辑器
+Vue.use(VueQuillEditor)
 
 Vue.prototype.$http = axios
 axios.defaults.baseURL = 'https://lianghj.top:8888/api/private/v1/'
