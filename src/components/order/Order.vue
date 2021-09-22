@@ -10,9 +10,9 @@
     <el-card>
       <el-row :gutter="20">
         <el-col :span="7">
-          <el-input placeholder="请输入内容" class="input-with-select" closed>
+          <el-input placeholder="请输入内容" v-model="searchInput" class="input-with-select" closed>
             <template #append>
-              <el-button icon="el-icon-search"></el-button>
+              <el-button icon="el-icon-search" @click="searchContent"></el-button>
             </template>
           </el-input>
         </el-col>
@@ -142,7 +142,9 @@ export default {
       // 控制物流进度弹框是否显示
       progressDialogVisible: false,
       // 保存物流信息
-      progressInfo: []
+      progressInfo: [],
+      // 搜索框内容
+      searchInput: ''
     }
   },
   created () {
@@ -183,6 +185,10 @@ export default {
       if (res.meta.status !== 200) return this.$message.error('物流进度获取失败')
       this.progressInfo = res.data
       this.progressDialogVisible = true
+    },
+    // 监听搜索框是否被点击
+    searchContent () {
+      console.log(123)
     }
   }
 }

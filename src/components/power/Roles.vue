@@ -9,8 +9,8 @@
     <!-- 卡片区域 -->
     <el-card>
       <!-- 添加角色区域 -->
-      <el-row>
-        <el-col>
+      <el-row :gutter="20">
+        <el-col :span="4">
           <el-button type="primary" @click="roleDialogVisible = true">添加角色</el-button>
         </el-col>
       </el-row>

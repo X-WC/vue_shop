@@ -26,25 +26,28 @@
           :default-active="activePath">
           <!-- 一级菜单 -->
           <el-submenu
-           v-for="item of menuList"
+           v-for="item in menuList"
           :key="item.id"
-          :index="item.id+''">
+          :index="item.id + ''">
             <!-- 一级菜单模版区域 -->
-            <template #title>
-              <i :class="iconObj[item.id]"></i>
-              <span>{{item.authName}}</span>
+            <template slot="title">
+              <!-- 图标 -->
+              <i :class="iconObj[item.id]">
+              </i>
+              <!-- 文本 -->
+              <span>{{ item.authName }}</span>
             </template>
               <!-- 二级菜单 -->
               <el-menu-item
               :index="'/'+ subItem.path"
-              v-for="subItem of item.children"
+              v-for="subItem in item.children"
               :key="subItem.id"
               @click="savePath('/'+ subItem.path)"
               >
                 <!-- 二级菜单模版区域 -->
-                <template #title>
+                <template slot="title">
                   <i class="el-icon-menu"></i>
-                  <span>{{subItem.authName}}</span>
+                  <span>{{ subItem.authName }}</span>
                 </template>
               </el-menu-item>
           </el-submenu>
@@ -66,10 +69,12 @@ export default {
     return {
       menuList: [],
       iconObj: {
-        125: 'iconfont icon-yonghu',
-        103: 'iconfont icon-component-full',
-        101: 'iconfont icon-gouwudai',
-        102: 'iconfont icon-dingdan',
+        // 一级菜单的icon图标
+        147: 'el-icon-magic-stick',
+        125: 'iconfont icon-users',
+        103: 'iconfont icon-tijikongjian',
+        101: 'iconfont icon-shangpin',
+        102: 'iconfont icon-danju',
         145: 'iconfont icon-baobiao'
       },
       isCollapse: false,
@@ -91,10 +96,11 @@ export default {
     async getMenuList () {
       // 得到menus里的信息
       const { data: res } = await this.$http.get('menus', this.menuList)
-      if (res.meta.status !== 200) return this.$message.error('请求失败')
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       // console.log(res)
       // 将menus里的信息赋值给menuList
       this.menuList = res.data
+      console.log(this.menuList)
     },
     // 是否折叠侧边栏 默认为false 取反为true
     toggleCollapse () {

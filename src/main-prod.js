@@ -3,16 +3,15 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import axios from 'axios'
-import './plugins/element.js'
-import './assets/css/global.css'
-import './assets/css/iconfont.css'
+// import './plugins/element.js'
 import TreeTable from 'vue-table-with-tree-grid'
+
+// 导入字体图标
+import './assets/fonts/iconfont.css'
+// 导入全局样式
+import './assets/css/global.css'
 // 导入富文本编辑器
 import VueQuillEditor from 'vue-quill-editor'
-// 导入富文本编辑器的相关样式
-import 'quill/dist/quill.core.css' // import styles
-import 'quill/dist/quill.snow.css' // for snow theme
-import 'quill/dist/quill.bubble.css' // for bubble theme
 
 // 在全局情况下 绑定富文本编辑器
 Vue.use(VueQuillEditor)
